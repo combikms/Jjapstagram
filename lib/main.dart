@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import './style.dart' as style;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(
@@ -19,6 +21,20 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   var tab = 0;
+  var post = [];
+
+  getData() async {
+    var result = await http.get(Uri.parse('https://codingapple1.github.io/app/data.json'));
+    setState(() {
+      post =jsonDecode(result.body);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +46,7 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       body: [
-        ListView(
-          children: [
-            Home(),
-            Home(),
-            Home(),
-          ],
-        ),
+        ListView(children: List.generate(post.length, (i) => Post(post: post[i]))),
         Text('Shop')
       ][tab],
       bottomNavigationBar: BottomNavigationBar(
@@ -56,8 +66,9 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+class Post extends StatelessWidget {
+  const Post({super.key, this.post});
+  final post;
 
   @override
   Widget build(BuildContext context) {
@@ -65,15 +76,15 @@ class Home extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset('assets/car1.png'),
+          Image.network(post['image'].toString()),
           Container(
             padding: EdgeInsets.all(15),
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('좋아요 100', style: TextStyle(fontWeight: FontWeight.bold,),),
-                  Text('글쓴이'),
-                  Text('글내용'),
+                  Text('좋아요 ${post['likes'].toString()}', style: TextStyle(fontWeight: FontWeight.bold,),),
+                  Text(post['user'].toString()),
+                  Text(post['content'].toString()),
               ]
             )
           )
