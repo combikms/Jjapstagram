@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import './style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/rendering.dart';
 
 void main() {
   runApp(
@@ -22,6 +23,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   var tab = 0;
   var post = [];
+  var scroll = ScrollController();
 
   getData() async {
     var result = await http.get(Uri.parse('https://codingapple1.github.io/app/data.json'));
@@ -34,6 +36,14 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     getData();
+    scroll.addListener(() async {
+      if (scroll.position.pixels == scroll.position.maxScrollExtent) {
+        var result = await http.get(Uri.parse('https://codingapple1.github.io/app/more1.json'));
+        setState(() {
+          post = [...post, jsonDecode(result.body)];
+        });
+      }
+    });
   }
 
   @override
@@ -46,7 +56,7 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       body: [
-        ListView(children: List.generate(post.length, (i) => Post(post: post[i]))),
+        ListView(controller: scroll, children: List.generate(post.length, (i) => Post(post: post[i]))),
         Text('Shop')
       ][tab],
       bottomNavigationBar: BottomNavigationBar(
