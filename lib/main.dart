@@ -100,6 +100,25 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+class Store extends ChangeNotifier {
+  var name = 'john kim';
+  var followers = 0;
+  var isFollowed = false;
+  var profileImage = [];
+
+  handleFollow() {
+    isFollowed = isFollowed ? false : true;
+    followers = isFollowed ? followers + 1 : followers - 1;
+    notifyListeners();
+  }
+
+  getImages() async {
+    var result = await http.get(Uri.parse('https://codingapple1.github.io/app/profile.json'));
+    profileImage = jsonDecode(result.body);
+    notifyListeners();
+  }
+}
+
 class Post extends StatelessWidget {
   const Post({super.key, this.post});
   final post;
@@ -120,8 +139,13 @@ class Post extends StatelessWidget {
                   GestureDetector(
                     child: Text(post['user'].toString()),
                     onTap: () {
-                      Navigator.push(context,
-                        CupertinoPageRoute(builder: (c) => Profile())
+                      var store = context.read<Store>();
+                      if (store.profileImage.isEmpty) {
+                        store.getImages();
+                      }
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (c) => Profile()),
                       );
                     },
                   ),
@@ -135,17 +159,6 @@ class Post extends StatelessWidget {
   }
 }
 
-class Store extends ChangeNotifier {
-  var name = 'john kim';
-  var followers = 0;
-  var isFollowed = false;
-  handleFollow() {
-    isFollowed = isFollowed ? false : true;
-    followers = isFollowed ? followers + 1 : followers - 1;
-    notifyListeners();
-  }
-}
-
 
 class Profile extends StatelessWidget {
   const Profile({super.key});
@@ -154,24 +167,46 @@ class Profile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.watch<Store>().name)),
-      body: Container(
-        padding: EdgeInsets.all(10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(Icons.circle, size: 50.0),
-            Text("팔로워 ${context.watch<Store>().followers.toString()}명"),
-            ElevatedButton(
-                onPressed: () {
-                  context.read<Store>().handleFollow();
-                }, child: Text('팔로우')
-            )
-          ],
-        ),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: ProfileHeader(),
+          ),
+          SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+                (c, i) => Image.network(context.watch<Store>().profileImage[i]),
+                childCount: context.watch<Store>().profileImage.length,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+          )
+        ],
       ),
     );
   }
 }
+
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(Icons.circle, size: 50.0),
+          Text("팔로워 ${context.watch<Store>().followers.toString()}명"),
+          ElevatedButton(
+              onPressed: () {
+                context.read<Store>().handleFollow();
+              }, child: Text('팔로우')
+          )
+        ],
+      ),
+    );
+  }
+}
+
 
 
 class Upload extends StatelessWidget {
