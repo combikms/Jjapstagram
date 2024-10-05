@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import './style.dart' as style;
 import 'package:http/http.dart' as http;
@@ -5,12 +6,16 @@ import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    MaterialApp(
-      theme: style.theme,
-      home: MyApp()
+    ChangeNotifierProvider(
+      create: (c) => Store(),
+      child: MaterialApp(
+        theme: style.theme,
+        home: MyApp()
+      ),
     )
   );
 }
@@ -112,7 +117,14 @@ class Post extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('좋아요 ${post['likes'].toString()}', style: TextStyle(fontWeight: FontWeight.bold,),),
-                  Text(post['user'].toString()),
+                  GestureDetector(
+                    child: Text(post['user'].toString()),
+                    onTap: () {
+                      Navigator.push(context,
+                        CupertinoPageRoute(builder: (c) => Profile())
+                      );
+                    },
+                  ),
                   Text(post['content'].toString()),
               ]
             )
@@ -122,6 +134,45 @@ class Post extends StatelessWidget {
     );
   }
 }
+
+class Store extends ChangeNotifier {
+  var name = 'john kim';
+  var followers = 0;
+  var isFollowed = false;
+  handleFollow() {
+    isFollowed = isFollowed ? false : true;
+    followers = isFollowed ? followers + 1 : followers - 1;
+    notifyListeners();
+  }
+}
+
+
+class Profile extends StatelessWidget {
+  const Profile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(context.watch<Store>().name)),
+      body: Container(
+        padding: EdgeInsets.all(10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(Icons.circle, size: 50.0),
+            Text("팔로워 ${context.watch<Store>().followers.toString()}명"),
+            ElevatedButton(
+                onPressed: () {
+                  context.read<Store>().handleFollow();
+                }, child: Text('팔로우')
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 class Upload extends StatelessWidget {
   Upload({Key? key, this.userImage, this.addPost}) : super(key: key);
