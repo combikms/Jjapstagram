@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:jjapstagram/notification.dart';
 import './style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -43,6 +44,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    initNotification(context);
     getData();
     scroll.addListener(() async {
       if (scroll.position.pixels == scroll.position.maxScrollExtent) {
@@ -57,6 +59,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(onPressed: (){
+        showNotification();
+      }, child: Text('+'),),
       appBar: AppBar(
         title: Text('Jjapstagram'),
         actions: [
